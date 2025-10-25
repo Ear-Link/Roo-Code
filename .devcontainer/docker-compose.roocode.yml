@@ -1,0 +1,37 @@
+services:
+
+  roocode:
+    privileged: true
+    environment:
+      - OLLAMA_API_URL=http://ollama_cpu:11435
+      - EMBEDER_API_URL=http://qdrant:6333
+    depends_on:
+      - ollama_cpu
+      - qdrant
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile_roocode
+    restart: always
+    command: sleep infinity
+    volumes:
+      - ..:/project
+
+  ollama_cpu:
+    image: ollama/ollama
+    restart: always
+    ports:
+      - "11435:11435"
+    volumes:
+      - ollama_data:/root/.ollama
+
+  qdrant:
+    image: qdrant/qdrant
+    restart: always
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_storage:/qdrant/storage
+
+volumes:
+  ollama_data:
+  qdrant_storage:
