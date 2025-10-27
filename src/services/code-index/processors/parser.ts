@@ -10,9 +10,7 @@ import { MAX_BLOCK_CHARS, MIN_BLOCK_CHARS, MIN_CHUNK_REMAINDER_CHARS, MAX_CHARS_
 import { TelemetryService } from "@roo-code/telemetry"
 import { TelemetryEventName } from "@roo-code/types"
 import { sanitizeErrorMessage } from "../shared/validation-helpers"
-//import { substringsToRemove as cSubstringsToRemove } from "../../tree-sitter/queries/c"
-
-export const cSubstringsToRemove: string[] = ["__attribute__((packed))"]
+import { substringsToRemove as cSubstringsToRemove } from "../../tree-sitter/queries/c"
 
 /**
  * Implementation of the code parser interface

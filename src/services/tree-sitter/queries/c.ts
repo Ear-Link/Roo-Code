@@ -31,6 +31,8 @@ C Language Constructs Supported by Tree-Sitter Parser:
 - conditional compilation
 */
 
+export const substringsToRemove: string[] = ["__attribute__((packed))"]
+
 export default `
 ; Function declarations
 (
