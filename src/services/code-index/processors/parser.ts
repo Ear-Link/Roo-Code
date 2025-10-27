@@ -10,6 +10,9 @@ import { MAX_BLOCK_CHARS, MIN_BLOCK_CHARS, MIN_CHUNK_REMAINDER_CHARS, MAX_CHARS_
 import { TelemetryService } from "@roo-code/telemetry"
 import { TelemetryEventName } from "@roo-code/types"
 import { sanitizeErrorMessage } from "../shared/validation-helpers"
+//import { substringsToRemove as cSubstringsToRemove } from "../../tree-sitter/queries/c"
+
+export const cSubstringsToRemove: string[] = ["__attribute__((packed))"]
 
 /**
  * Implementation of the code parser interface
@@ -147,6 +150,11 @@ export class CodeParser implements ICodeParser {
 		if (!language) {
 			console.warn(`No parser available for file extension: ${ext}`)
 			return []
+		}
+
+		// Remove specified substrings from content for C files
+		if (ext === "c" && cSubstringsToRemove && cSubstringsToRemove.length > 0) {
+			content = this.removeSubstrings(content, cSubstringsToRemove)
 		}
 
 		const tree = language.parser.parse(content)
@@ -548,6 +556,26 @@ export class CodeParser implements ICodeParser {
 
 		return results
 	}
+
+	/**
+	 * Removes specified substrings from a given string.
+	 * @param text The original string.
+	 * @param substringsToRemove An array of substrings to remove.
+	 * @returns The string with substrings removed.
+	 */
+	private removeSubstrings(text: string, substringsToRemove: string[]): string {
+		let result = text
+		for (const sub of substringsToRemove) {
+			// Using a regex with global flag to replace all occurrences
+			result = result.replace(new RegExp(escapeRegExp(sub), "g"), "")
+		}
+		return result
+	}
+}
+
+// Helper function to escape special characters in a string for use in RegExp
+function escapeRegExp(string: string): string {
+	return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") // $& means the whole matched string
 }
 
 // Export a singleton instance for convenience
