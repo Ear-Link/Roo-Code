@@ -74,6 +74,8 @@ export default String.raw`
 
 // ===== GLOBAL VARIABLES =====
 
+static const char* TAG = "MAIN";
+
 // Testing global constant declarations
 static const int MAGIC_NUMBER = (
     0x1234 << 16 |        /* High word */
@@ -85,6 +87,20 @@ static const char* const BUILD_INFO[] = {
     __TIME__,           /* Compilation time */
     "1.0.0",           /* Version string */
     "DEBUG"            /* Build type */
+};
+
+static const char CHAR_LIST[] = {
+    'a',            /* Char 1 */
+    'b',            /* Char 2 */
+    'c',            /* Char 3 */
+    'd'             /* Char 4 */
+};
+
+static const int INT_LIST[] = {
+    123,            /* int 1 */
+    234,            /* int 2 */
+    345,            /* int 3 */
+    456             /* int 4 */
 };
 
 // Testing global struct initialization
@@ -134,6 +150,7 @@ int variadic_prototype(
     ...
 );
 
+/**
  * Validates the provided configuration structure
  * @param config Pointer to configuration structure
  * @return int Status code (0 for success)

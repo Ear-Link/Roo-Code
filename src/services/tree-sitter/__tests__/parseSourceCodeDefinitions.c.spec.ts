@@ -101,10 +101,13 @@ describe("C Source Code Definition Tests", () => {
 
 	it("should parse global variable declarations", () => {
 		// Basic global variables
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*static const char\* TAG = \"MAIN\"/)
 		expect(parseResult).toMatch(/\d+--\d+ \|\s*static const int MAGIC_NUMBER =/)
 
 		// Array variables
 		expect(parseResult).toMatch(/\d+--\d+ \|\s*static const char\* const BUILD_INFO\[\]/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*static const char CHAR_LIST\[\]/)
+		expect(parseResult).toMatch(/\d+--\d+ \|\s*static const int INT_LIST\[\]/)
 
 		// Struct variables
 		expect(parseResult).toMatch(/\d+--\d+ \|\s*static struct config_struct/)

@@ -32,20 +32,19 @@ C Language Constructs Supported by Tree-Sitter Parser:
 */
 
 export default `
-; Function definitions and declarations
-(function_definition
-  declarator: (function_declarator
-    declarator: (identifier) @name.definition.function))
+; Function declarations
+(
+;    (comment)? .
+    (declaration
+        (function_declarator)@name.definition.function
+    )
+)
 
-(declaration
-  type: (_)?
-  declarator: (function_declarator
-    declarator: (identifier) @name.definition.function
-    parameters: (parameter_list)?)?) @definition.function
-
-(function_declarator
-  declarator: (identifier) @name.definition.function
-  parameters: (parameter_list)?) @definition.function
+; Function definitions
+(
+;    (comment)?@comment.block .
+    (function_definition)@definition.function
+)
 
 ; Struct definitions
 (struct_specifier
@@ -63,23 +62,51 @@ export default `
 (type_definition
   declarator: (type_identifier) @name.definition.type) @definition.type
 
-; Global variables
+; Global variables +
 (declaration
   (storage_class_specifier)?
   type: (_)
-  declarator: (identifier) @name.definition.variable) @definition.variable
+  declarator: (identifier) @name.definition.variable
+) @definition.variable
 
 (declaration
   (storage_class_specifier)?
   type: (_)
   declarator: (init_declarator
-    declarator: (identifier) @name.definition.variable)) @definition.variable
+    declarator: (identifier) @name.definition.variable)
+) @definition.variable
+
+(declaration 
+  (init_declarator
+    (pointer_declarator
+      (array_declarator
+        (identifier) @name.definition.variable
+      )
+    )
+  )
+)@definition.variable
+
+(declaration
+  (init_declarator
+    (array_declarator
+      (identifier) @name.definition.variable
+    )
+  )
+)@definition.variable
+
+(declaration
+  (init_declarator
+    (pointer_declarator
+      (identifier)
+    )
+  )
+)@definition.variable
 
 ; Object-like macros
 (preproc_def
   name: (identifier) @name.definition.macro) @definition.macro
 
-; Function-like macros
+; Function-like macros +
 (preproc_function_def
   name: (identifier) @name.definition.macro) @definition.macro
 `

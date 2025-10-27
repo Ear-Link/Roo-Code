@@ -10,7 +10,7 @@
 				"terminal.integrated.defaultProfile.linux": "bash",
 				"idf.gitPath": "/usr/bin/git"
 			},
-			"extensions": ["rooveterinaryinc.roo-cline"]
+			"extensions": ["rooveterinaryinc.roo-cline", "jrieken.vscode-tree-sitter-query"]
 		}
 	},
 	"postCreateCommand": "pnpm install",
