@@ -19,7 +19,7 @@ curl -fsSL https://raw.githubusercontent.com/RooCodeInc/Roo-Code/main/apps/cli/i
 **Requirements:**
 
 - Node.js 20 or higher
-- macOS (Intel or Apple Silicon) or Linux (x64 or ARM64)
+- macOS Apple Silicon (M1/M2/M3/M4) or Linux x64
 
 **Custom installation directory:**
 
@@ -71,7 +71,13 @@ By default, the CLI prompts for approval before executing actions:
 ```bash
 export OPENROUTER_API_KEY=sk-or-v1-...
 
-roo "What is this project?" --workspace ~/Documents/my-project
+roo "What is this project?" -w ~/Documents/my-project
+```
+
+You can also run without a prompt and enter it interactively in TUI mode:
+
+```bash
+roo -w ~/Documents/my-project
 ```
 
 In interactive mode:
@@ -86,46 +92,105 @@ In interactive mode:
 For automation and scripts, use `-y` to auto-approve all actions:
 
 ```bash
-roo -y "Refactor the utils.ts file" --workspace ~/Documents/my-project
+roo "Refactor the utils.ts file" -y -w ~/Documents/my-project
 ```
 
 In non-interactive mode:
 
 - Tool, command, browser, and MCP actions are auto-approved
-- Followup questions show a 10-second timeout, then auto-select the first suggestion
+- Followup questions show a 60-second timeout, then auto-select the first suggestion
 - Typing any key cancels the timeout and allows manual input
+
+### Roo Code Cloud Authentication
+
+To use Roo Code Cloud features (like the provider proxy), you need to authenticate:
+
+```bash
+# Log in to Roo Code Cloud (opens browser)
+roo auth login
+
+# Check authentication status
+roo auth status
+
+# Log out
+roo auth logout
+```
+
+The `auth login` command:
+
+1. Opens your browser to authenticate with Roo Code Cloud
+2. Receives a secure token via localhost callback
+3. Stores the token in `~/.config/roo/credentials.json`
+
+Tokens are valid for 90 days. The CLI will prompt you to re-authenticate when your token expires.
+
+**Authentication Flow:**
+
+```
+┌──────┐         ┌─────────┐         ┌───────────────┐
+│  CLI │         │ Browser │         │ Roo Code Cloud│
+└──┬───┘         └────┬────┘         └───────┬───────┘
+   │                  │                      │
+   │ Open auth URL    │                      │
+   │─────────────────>│                      │
+   │                  │                      │
+   │                  │ Authenticate         │
+   │                  │─────────────────────>│
+   │                  │                      │
+   │                  │<─────────────────────│
+   │                  │ Token via callback   │
+   │<─────────────────│                      │
+   │                  │                      │
+   │ Store token      │                      │
+   │                  │                      │
+```
 
 ## Options
 
-| Option                            | Description                                                                    | Default           |
-| --------------------------------- | ------------------------------------------------------------------------------ | ----------------- |
-| `-w, --workspace <path>`          | Workspace path to operate in                                                   | Current directory |
-| `-e, --extension <path>`          | Path to the extension bundle directory                                         | Auto-detected     |
-| `-v, --verbose`                   | Enable verbose output (show VSCode and extension logs)                         | `false`           |
-| `-d, --debug`                     | Enable debug output (includes detailed debug information, prompts, paths, etc) | `false`           |
-| `-x, --exit-on-complete`          | Exit the process when task completes (useful for testing)                      | `false`           |
-| `-y, --yes`                       | Non-interactive mode: auto-approve all actions                                 | `false`           |
-| `-k, --api-key <key>`             | API key for the LLM provider                                                   | From env var      |
-| `-p, --provider <provider>`       | API provider (anthropic, openai, openrouter, etc.)                             | `openrouter`      |
-| `-m, --model <model>`             | Model to use                                                                   | Provider default  |
-| `-M, --mode <mode>`               | Mode to start in (code, architect, ask, debug, etc.)                           | `code`            |
-| `-r, --reasoning-effort <effort>` | Reasoning effort level (none, minimal, low, medium, high, xhigh)               | `medium`          |
+| Option                                      | Description                                                                             | Default                                  |
+| ------------------------------------------- | --------------------------------------------------------------------------------------- | ---------------------------------------- |
+| `[prompt]`                                  | Your prompt (positional argument, optional)                                             | None                                     |
+| `--prompt-file <path>`                      | Read prompt from a file instead of command line argument                                | None                                     |
+| `-w, --workspace <path>`                    | Workspace path to operate in                                                            | Current directory                        |
+| `-p, --print`                               | Print response and exit (non-interactive mode)                                          | `false`                                  |
+| `-e, --extension <path>`                    | Path to the extension bundle directory                                                  | Auto-detected                            |
+| `-d, --debug`                               | Enable debug output (includes detailed debug information, prompts, paths, etc)          | `false`                                  |
+| `-y, --yes, --dangerously-skip-permissions` | Auto-approve all actions (use with caution)                                             | `false`                                  |
+| `-k, --api-key <key>`                       | API key for the LLM provider                                                            | From env var                             |
+| `--provider <provider>`                     | API provider (roo, anthropic, openai, openrouter, etc.)                                 | `openrouter` (or `roo` if authenticated) |
+| `-m, --model <model>`                       | Model to use                                                                            | `anthropic/claude-opus-4.6`              |
+| `--mode <mode>`                             | Mode to start in (code, architect, ask, debug, etc.)                                    | `code`                                   |
+| `-r, --reasoning-effort <effort>`           | Reasoning effort level (unspecified, disabled, none, minimal, low, medium, high, xhigh) | `medium`                                 |
+| `--ephemeral`                               | Run without persisting state (uses temporary storage)                                   | `false`                                  |
+| `--oneshot`                                 | Exit upon task completion                                                               | `false`                                  |
+| `--output-format <format>`                  | Output format with `--print`: `text`, `json`, or `stream-json`                          | `text`                                   |
 
-By default, the CLI runs in quiet mode (suppressing VSCode/extension logs) and only shows assistant output. Use `-v` to see all logs, or `-d` for detailed debug information.
+## Auth Commands
+
+| Command           | Description                        |
+| ----------------- | ---------------------------------- |
+| `roo auth login`  | Authenticate with Roo Code Cloud   |
+| `roo auth logout` | Clear stored authentication token  |
+| `roo auth status` | Show current authentication status |
 
 ## Environment Variables
 
 The CLI will look for API keys in environment variables if not provided via `--api-key`:
 
-| Provider      | Environment Variable |
-| ------------- | -------------------- |
-| anthropic     | `ANTHROPIC_API_KEY`  |
-| openai        | `OPENAI_API_KEY`     |
-| openrouter    | `OPENROUTER_API_KEY` |
-| google/gemini | `GOOGLE_API_KEY`     |
-| mistral       | `MISTRAL_API_KEY`    |
-| deepseek      | `DEEPSEEK_API_KEY`   |
-| bedrock       | `AWS_ACCESS_KEY_ID`  |
+| Provider          | Environment Variable        |
+| ----------------- | --------------------------- |
+| roo               | `ROO_API_KEY`               |
+| anthropic         | `ANTHROPIC_API_KEY`         |
+| openai-native     | `OPENAI_API_KEY`            |
+| openrouter        | `OPENROUTER_API_KEY`        |
+| gemini            | `GOOGLE_API_KEY`            |
+| vercel-ai-gateway | `VERCEL_AI_GATEWAY_API_KEY` |
+
+**Authentication Environment Variables:**
+
+| Variable          | Description                                                          |
+| ----------------- | -------------------------------------------------------------------- |
+| `ROO_WEB_APP_URL` | Override the Roo Code Cloud URL (default: `https://app.roocode.com`) |
 
 ## Architecture
 
@@ -166,17 +231,11 @@ The CLI will look for API keys in environment variables if not provided via `--a
     - CLI → Extension: `emit("webviewMessage", {...})`
     - Extension → CLI: `emit("extensionWebviewMessage", {...})`
 
-## Current Limitations
-
-- **No TUI**: Output is plain text (no React/Ink UI yet)
-- **No configuration file**: Settings are passed via command line flags
-- **No persistence**: Each run is a fresh session
-
 ## Development
 
 ```bash
-# Watch mode for development
-pnpm dev
+# Run directly from source (no build required)
+pnpm dev --provider roo --api-key $ROO_API_KEY --print "Hello"
 
 # Run tests
 pnpm test
@@ -188,44 +247,41 @@ pnpm check-types
 pnpm lint
 ```
 
+By default the `start` script points `ROO_CODE_PROVIDER_URL` at `http://localhost:8080/proxy` for local development. To point at the production API instead, override the environment variable:
+
+```bash
+ROO_CODE_PROVIDER_URL=https://api.roocode.com/proxy pnpm dev --provider roo --api-key $ROO_API_KEY --print "Hello"
+```
+
 ## Releasing
 
-To create a new release, run the release script from the monorepo root:
+Official releases are created via the GitHub Actions workflow at `.github/workflows/cli-release.yml`.
+
+To trigger a release:
+
+1. Go to **Actions** → **CLI Release**
+2. Click **Run workflow**
+3. Optionally specify a version (defaults to `package.json` version)
+4. Click **Run workflow**
+
+The workflow will:
+
+1. Build the CLI on all platforms (macOS Apple Silicon, Linux x64)
+2. Create platform-specific tarballs with bundled ripgrep
+3. Verify each tarball
+4. Create a GitHub release with all tarballs attached
+
+### Local Builds
+
+For local development and testing, use the build script:
 
 ```bash
-# Release using version from package.json
-./apps/cli/scripts/release.sh
+# Build tarball for your current platform
+./apps/cli/scripts/build.sh
 
-# Release with a specific version
-./apps/cli/scripts/release.sh 0.1.0
+# Build and install locally
+./apps/cli/scripts/build.sh --install
+
+# Fast build (skip verification)
+./apps/cli/scripts/build.sh --skip-verify
 ```
-
-The script will:
-
-1. Build the extension and CLI
-2. Create a platform-specific tarball (for your current OS/architecture)
-3. Create a GitHub release with the tarball attached
-
-**Prerequisites:**
-
-- GitHub CLI (`gh`) installed and authenticated (`gh auth login`)
-- pnpm installed
-
-## Troubleshooting
-
-### Extension bundle not found
-
-Make sure you've built the main extension first:
-
-```bash
-cd src
-pnpm bundle
-```
-
-### Module resolution errors
-
-The CLI expects the extension to be a CommonJS bundle. Make sure the extension's esbuild config outputs CommonJS.
-
-### "vscode" module not found
-
-The CLI intercepts `require('vscode')` calls. If you see this error, the module resolution interception may have failed.

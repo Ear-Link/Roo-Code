@@ -1,10 +1,10 @@
 import path from "path"
 import delay from "delay"
-import * as vscode from "vscode"
 import fs from "fs/promises"
 
+import { type ClineSayTool, DEFAULT_WRITE_DELAY_MS } from "@roo-code/types"
+
 import { Task } from "../task/Task"
-import { ClineSayTool } from "../../shared/ExtensionMessage"
 import { formatResponse } from "../prompts/responses"
 import { RecordSource } from "../context-tracking/FileContextTrackerTypes"
 import { fileExistsAtPath, createDirectoriesForFile } from "../../utils/fs"
@@ -12,11 +12,11 @@ import { stripLineNumbers, everyLineHasLineNumbers } from "../../integrations/mi
 import { getReadablePath } from "../../utils/path"
 import { isPathOutsideWorkspace } from "../../utils/pathUtils"
 import { unescapeHtmlEntities } from "../../utils/text-normalization"
-import { DEFAULT_WRITE_DELAY_MS } from "@roo-code/types"
 import { EXPERIMENT_IDS, experiments } from "../../shared/experiments"
 import { convertNewFileToUnifiedDiff, computeDiffStats, sanitizeUnifiedDiff } from "../diff/stats"
-import { BaseTool, ToolCallbacks } from "./BaseTool"
 import type { ToolUse } from "../../shared/tools"
+
+import { BaseTool, ToolCallbacks } from "./BaseTool"
 
 interface WriteToFileParams {
 	path: string
@@ -26,15 +26,8 @@ interface WriteToFileParams {
 export class WriteToFileTool extends BaseTool<"write_to_file"> {
 	readonly name = "write_to_file" as const
 
-	parseLegacy(params: Partial<Record<string, string>>): WriteToFileParams {
-		return {
-			path: params.path || "",
-			content: params.content || "",
-		}
-	}
-
 	async execute(params: WriteToFileParams, task: Task, callbacks: ToolCallbacks): Promise<void> {
-		const { pushToolResult, handleError, askApproval, removeClosingTag } = callbacks
+		const { pushToolResult, handleError, askApproval } = callbacks
 		const relPath = params.path
 		let newContent = params.content
 
@@ -92,12 +85,12 @@ export class WriteToFileTool extends BaseTool<"write_to_file"> {
 			newContent = unescapeHtmlEntities(newContent)
 		}
 
-		const fullPath = relPath ? path.resolve(task.cwd, removeClosingTag("path", relPath)) : ""
+		const fullPath = relPath ? path.resolve(task.cwd, relPath) : ""
 		const isOutsideWorkspace = isPathOutsideWorkspace(fullPath)
 
 		const sharedMessageProps: ClineSayTool = {
 			tool: fileExists ? "editedExistingFile" : "newFileCreated",
-			path: getReadablePath(task.cwd, removeClosingTag("path", relPath)),
+			path: getReadablePath(task.cwd, relPath),
 			content: newContent,
 			isOutsideWorkspace,
 			isProtected: isWriteProtected,

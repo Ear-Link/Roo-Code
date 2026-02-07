@@ -28,14 +28,18 @@
 		"openInCloud": "Otwórz zadanie w Roo Code Cloud",
 		"openInCloudIntro": "Kontynuuj monitorowanie lub interakcję z Roo z dowolnego miejsca. Zeskanuj, kliknij lub skopiuj, aby otworzyć.",
 		"openApiHistory": "Otwórz historię API",
-		"openUiHistory": "Otwórz historię UI"
+		"openUiHistory": "Otwórz historię UI",
+		"backToParentTask": "Zadanie nadrzędne"
 	},
 	"unpin": "Odepnij",
 	"pin": "Przypnij",
 	"tokenProgress": {
 		"availableSpace": "Dostępne miejsce: {{amount}} tokenów",
 		"tokensUsed": "Wykorzystane tokeny: {{used}} z {{total}}",
-		"reservedForResponse": "Zarezerwowane dla odpowiedzi modelu: {{amount}} tokenów"
+		"reservedForResponse": "Zarezerwowane dla odpowiedzi modelu: {{amount}} tokenów",
+		"tokensUsedLabel": "Wykorzystane tokeny",
+		"reservedForResponseLabel": "Zarezerwowane dla odpowiedzi",
+		"availableSpaceLabel": "Dostępne miejsce"
 	},
 	"retry": {
 		"title": "Ponów",
@@ -82,10 +86,15 @@
 		"title": "Zakończ",
 		"tooltip": "Zakończ bieżące zadanie"
 	},
+	"stop": {
+		"title": "Zatrzymaj",
+		"tooltip": "Zatrzymaj bieżące zadanie"
+	},
 	"cancel": {
 		"title": "Anuluj",
 		"tooltip": "Anuluj bieżącą operację"
 	},
+	"enqueueMessage": "Dodaj wiadomość do kolejki (zostanie wysłana po zakończeniu bieżącego zadania)",
 	"scrollToBottom": "Przewiń do dołu czatu",
 	"about": "Roo Code to cały zespół deweloperów AI w Twoim edytorze.",
 	"docs": "Sprawdź naszą <DocsLink>dokumentację</DocsLink>, aby dowiedzieć się więcej.",
@@ -253,7 +262,8 @@
 		"completionContent": "Podzadanie zakończone",
 		"resultContent": "Wyniki podzadania",
 		"defaultResult": "Proszę kontynuować następne zadanie.",
-		"completionInstructions": "Podzadanie zakończone! Możesz przejrzeć wyniki i zasugerować poprawki lub następne kroki. Jeśli wszystko wygląda dobrze, potwierdź, aby zwrócić wynik do zadania nadrzędnego."
+		"completionInstructions": "Podzadanie zakończone! Możesz przejrzeć wyniki i zasugerować poprawki lub następne kroki. Jeśli wszystko wygląda dobrze, potwierdź, aby zwrócić wynik do zadania nadrzędnego.",
+		"goToSubtask": "Wyświetl zadanie"
 	},
 	"questions": {
 		"hasQuestion": "Roo ma pytanie"
@@ -271,7 +281,8 @@
 		"title": "Szczegóły błędu",
 		"copyToClipboard": "Kopiuj do schowka",
 		"copied": "Skopiowano!",
-		"diagnostics": "Uzyskaj szczegółowe informacje o błędzie"
+		"diagnostics": "Uzyskaj szczegółowe informacje o błędzie",
+		"proxyProvider": "Wygląda na to, że używasz dostawcy opartego na proxy. Pamiętaj, aby sprawdzić jego dzienniki i upewnić się, że nie przepisuje żądań Roo."
 	},
 	"powershell": {
 		"issues": "Wygląda na to, że masz problemy z Windows PowerShell, proszę zapoznaj się z tym"
@@ -313,6 +324,10 @@
 			"description": "Starsze wiadomości zostały usunięte z konwersacji, aby pozostać w granicach okna kontekstu. To szybsze, ale mniej zachowujące kontekst podejście w porównaniu z kondensacją."
 		}
 	},
+	"skill": {
+		"wantsToLoad": "Roo chce załadować umiejętność",
+		"didLoad": "Roo załadował umiejętność"
+	},
 	"followUpSuggest": {
 		"copyToInput": "Kopiuj do pola wprowadzania (lub Shift + kliknięcie)",
 		"timerPrefix": "Automatyczne zatwierdzanie włączone. Zaznaczanie za {{seconds}}s…"
@@ -329,9 +344,8 @@
 		},
 		"release": {
 			"heading": "Co nowego:",
-			"stickyProfiles": "Lepkie profile dostawcy - Zadania teraz pamiętają ich konfigurację API, więc przełączanie profili w trakcie sesji nie wpływa na uruchomione zadania.",
-			"imageMentions": "Wzmianki o plikach obrazu @mentions - Odnieś się bezpośrednio do obrazów w czacie, korzystając z @mentions, aby uwzględnić je w swoim kontekście.",
-			"brrrMode": "YOLO to teraz BRRR - Automatyczne zatwierdzanie wszystkiego zostało przemianowane z \"YOLO\" na \"BRRR\". Oczywiście."
+			"claudeOpus": "Claude Opus 4.6: Teraz dostępny u wszystkich dostawców—Roo Code Router, Anthropic, AWS Bedrock, Google Vertex i OpenRouter—przynoszący najbardziej zaawansowany model Anthropic na twoją preferowaną platformę.",
+			"gptCodex": "GPT-5.3-Codex: Najnowszy model kodowania OpenAI jest teraz obsługiwany u dostawcy OpenAI - ChatGPT, zapewniający zaawansowaną generację kodu i zrozumienie."
 		},
 		"cloudAgents": {
 			"heading": "Nowości w chmurze:",
@@ -341,8 +355,14 @@
 		},
 		"careers": "Dodatkowo, <careersLink>zatrudniamy!</careersLink>"
 	},
+	"costs": {
+		"totalWithSubtasks": "Całkowity koszt (w tym podzadania): ${{cost}}",
+		"total": "Całkowity koszt: ${{cost}}",
+		"includesSubtasks": "Zawiera koszty podzadań"
+	},
 	"browser": {
 		"session": "Sesja przeglądarki",
+		"active": "Aktywna",
 		"rooWantsToUse": "Roo chce użyć przeglądarki",
 		"consoleLogs": "Logi konsoli",
 		"noNewLogs": "(Brak nowych logów)",
@@ -480,5 +500,17 @@
 		"updated": "Zaktualizowano listę zadań do wykonania",
 		"completed": "Ukończono",
 		"started": "Rozpoczęto"
+	},
+	"tooManyTools": {
+		"title": "Włączono zbyt wiele narzędzi",
+		"toolsPart_one": "{{count}} narzędzie",
+		"toolsPart_other": "{{count}} narzędzi",
+		"serversPart_one": "{{count}} serwer MCP",
+		"serversPart_other": "{{count}} serwerów MCP",
+		"messageTemplate": "Masz {{tools}} włączonych przez {{servers}}. Taka duża liczba może zamieszać model i prowadzić do błędów. Staraj się, aby była poniżej {{threshold}}.",
+		"openMcpSettings": "Otwórz ustawienia MCP"
+	},
+	"readCommandOutput": {
+		"title": "Roo read command output"
 	}
 }

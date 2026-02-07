@@ -10,10 +10,10 @@ import { Trans } from "react-i18next"
 
 import { useDebounceEffect } from "@src/utils/useDebounceEffect"
 import { appendImages } from "@src/utils/imageUtils"
+import { getCostBreakdownIfNeeded } from "@src/utils/costFormatting"
 
-import type { ClineAsk, ClineMessage, ExtensionMessage, AudioType } from "@roo-code/types"
+import type { ClineAsk, ClineSayTool, ClineMessage, ExtensionMessage, AudioType } from "@roo-code/types"
 
-import { ClineSayTool } from "@roo/ExtensionMessage"
 import { findLast } from "@roo/array"
 import { SuggestionItem } from "@roo-code/types"
 import { combineApiRequests } from "@roo/combineApiRequests"
@@ -45,6 +45,7 @@ import SystemPromptWarning from "./SystemPromptWarning"
 import ProfileViolationWarning from "./ProfileViolationWarning"
 import { CheckpointWarning } from "./CheckpointWarning"
 import { QueuedMessages } from "./QueuedMessages"
+import { WorktreeSelector } from "./WorktreeSelector"
 import DismissibleUpsell from "../common/DismissibleUpsell"
 import { useCloudUpsell } from "@src/hooks/useCloudUpsell"
 import { Cloud } from "lucide-react"
@@ -95,6 +96,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		cloudIsAuthenticated,
 		messageQueue = [],
 		isBrowserSessionActive,
+		showWorktreesInHomeScreen,
 	} = useExtensionState()
 
 	const messagesRef = useRef(messages)
@@ -143,7 +145,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	const [enableButtons, setEnableButtons] = useState<boolean>(false)
 	const [primaryButtonText, setPrimaryButtonText] = useState<string | undefined>(undefined)
 	const [secondaryButtonText, setSecondaryButtonText] = useState<string | undefined>(undefined)
-	const [didClickCancel, setDidClickCancel] = useState(false)
+	const [_didClickCancel, setDidClickCancel] = useState(false)
 	const virtuosoRef = useRef<VirtuosoHandle>(null)
 	const [expandedRows, setExpandedRows] = useState<Record<number, boolean>>({})
 	const prevExpandedRowsRef = useRef<Record<number, boolean>>()
@@ -167,6 +169,16 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	const autoApproveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 	const userRespondedRef = useRef<boolean>(false)
 	const [currentFollowUpTs, setCurrentFollowUpTs] = useState<number | null>(null)
+	const [aggregatedCostsMap, setAggregatedCostsMap] = useState<
+		Map<
+			string,
+			{
+				totalCost: number
+				ownCost: number
+				childrenCost: number
+			}
+		>
+	>(new Map())
 
 	const clineAskRef = useRef(clineAsk)
 	useEffect(() => {
@@ -403,12 +415,14 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 							setSendingDisabled(true)
 							break
 						case "api_req_started":
-							if (secondLastMessage?.ask === "command_output") {
-								setSendingDisabled(true)
-								setSelectedImages([])
-								setClineAsk(undefined)
-								setEnableButtons(false)
-							}
+							// Clear button state when a new API request starts
+							// This fixes buttons persisting when the task continues
+							setSendingDisabled(true)
+							setSelectedImages([])
+							setClineAsk(undefined)
+							setEnableButtons(false)
+							setPrimaryButtonText(undefined)
+							setSecondaryButtonText(undefined)
 							break
 						case "api_req_finished":
 						case "error":
@@ -465,6 +479,18 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		// Reset user response flag for new task
 		userRespondedRef.current = false
 	}, [task?.ts])
+
+	const taskTs = task?.ts
+
+	// Request aggregated costs when task changes and has childIds
+	useEffect(() => {
+		if (taskTs && currentTaskItem?.childIds && currentTaskItem.childIds.length > 0) {
+			vscode.postMessage({
+				type: "getTaskWithAggregatedCosts",
+				text: currentTaskItem.id,
+			})
+		}
+	}, [taskTs, currentTaskItem?.id, currentTaskItem?.childIds])
 
 	useEffect(() => {
 		if (isHidden) {
@@ -586,7 +612,13 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				// - Task is busy (sendingDisabled)
 				// - API request in progress (isStreaming)
 				// - Queue has items (preserve message order during drain)
-				if (sendingDisabled || isStreaming || messageQueue.length > 0) {
+				// - Command is running (command_output) - user's message should be queued for AI, not sent to terminal
+				if (
+					sendingDisabled ||
+					isStreaming ||
+					messageQueue.length > 0 ||
+					clineAskRef.current === "command_output"
+				) {
 					try {
 						console.log("queueMessage", text, images)
 						vscode.postMessage({ type: "queueMessage", text, images })
@@ -619,7 +651,6 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 						case "tool":
 						case "browser_action_launch":
 						case "command": // User can provide feedback to a tool or command use.
-						case "command_output": // User can send input to command stdin.
 						case "use_mcp_server":
 						case "completion_result": // If this happens then the user has feedback for the completion result.
 						case "resume_task":
@@ -661,6 +692,26 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	)
 
 	const startNewTask = useCallback(() => vscode.postMessage({ type: "clearTask" }), [])
+
+	// Handle stop button click from textarea
+	const handleStopTask = useCallback(() => {
+		vscode.postMessage({ type: "cancelTask" })
+		setDidClickCancel(true)
+	}, [setDidClickCancel])
+
+	// Handle enqueue button click from textarea
+	const handleEnqueueCurrentMessage = useCallback(() => {
+		const text = inputValue.trim()
+		if (text || selectedImages.length > 0) {
+			vscode.postMessage({
+				type: "queueMessage",
+				text,
+				images: selectedImages,
+			})
+			setInputValue("")
+			setSelectedImages([])
+		}
+	}, [inputValue, selectedImages])
 
 	// This logic depends on the useEffect[messages] above to set clineAsk,
 	// after which buttons are shown and we then send an askResponse to the
@@ -734,6 +785,8 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			setSendingDisabled(true)
 			setClineAsk(undefined)
 			setEnableButtons(false)
+			setPrimaryButtonText(undefined)
+			setSecondaryButtonText(undefined)
 		},
 		[clineAsk, startNewTask, currentTaskItem?.parentTaskId],
 	)
@@ -785,7 +838,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			setClineAsk(undefined)
 			setEnableButtons(false)
 		},
-		[clineAsk, startNewTask, isStreaming],
+		[clineAsk, startNewTask, isStreaming, setDidClickCancel],
 	)
 
 	const { info: model } = useSelectedModel(apiConfiguration)
@@ -865,6 +918,15 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 					break
 				case "interactionRequired":
 					playSound("notification")
+					break
+				case "taskWithAggregatedCosts":
+					if (message.text && message.aggregatedCosts) {
+						setAggregatedCostsMap((prev) => {
+							const newMap = new Map(prev)
+							newMap.set(message.text!, message.aggregatedCosts!)
+							return newMap
+						})
+					}
 					break
 			}
 			// textAreaRef.current is not explicitly required here since React
@@ -1079,7 +1141,76 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 
 	const groupedMessages = useMemo(() => {
 		// Only filter out the launch ask and result messages - browser actions appear in chat
-		const result: ClineMessage[] = visibleMessages.filter((msg) => !isBrowserSessionMessage(msg))
+		const filtered: ClineMessage[] = visibleMessages.filter((msg) => !isBrowserSessionMessage(msg))
+
+		// Helper to check if a message is a read_file ask that should be batched
+		const isReadFileAsk = (msg: ClineMessage): boolean => {
+			if (msg.type !== "ask" || msg.ask !== "tool") return false
+			try {
+				const tool = JSON.parse(msg.text || "{}")
+				return tool.tool === "readFile" && !tool.batchFiles // Don't re-batch already batched
+			} catch {
+				return false
+			}
+		}
+
+		// Consolidate consecutive read_file ask messages into batches
+		const result: ClineMessage[] = []
+		let i = 0
+		while (i < filtered.length) {
+			const msg = filtered[i]
+
+			// Check if this starts a sequence of read_file asks
+			if (isReadFileAsk(msg)) {
+				// Collect all consecutive read_file asks
+				const batch: ClineMessage[] = [msg]
+				let j = i + 1
+				while (j < filtered.length && isReadFileAsk(filtered[j])) {
+					batch.push(filtered[j])
+					j++
+				}
+
+				if (batch.length > 1) {
+					// Create a synthetic batch message
+					const batchFiles = batch.map((batchMsg) => {
+						try {
+							const tool = JSON.parse(batchMsg.text || "{}")
+							return {
+								path: tool.path || "",
+								lineSnippet: tool.reason || "",
+								isOutsideWorkspace: tool.isOutsideWorkspace || false,
+								key: `${tool.path}${tool.reason ? ` (${tool.reason})` : ""}`,
+								content: tool.content || "",
+							}
+						} catch {
+							return { path: "", lineSnippet: "", key: "", content: "" }
+						}
+					})
+
+					// Use the first message as the base, but add batchFiles
+					const firstTool = JSON.parse(msg.text || "{}")
+					const syntheticMessage: ClineMessage = {
+						...msg,
+						text: JSON.stringify({
+							...firstTool,
+							batchFiles,
+						}),
+						// Store original messages for response handling
+						_batchedMessages: batch,
+					} as ClineMessage & { _batchedMessages: ClineMessage[] }
+
+					result.push(syntheticMessage)
+					i = j // Skip past all batched messages
+				} else {
+					// Single read_file ask, keep as-is
+					result.push(msg)
+					i++
+				}
+			} else {
+				result.push(msg)
+				i++
+			}
+		}
 
 		if (isCondensing) {
 			result.push({
@@ -1370,9 +1501,20 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 
 	useImperativeHandle(ref, () => ({
 		acceptInput: () => {
+			const hasInput = inputValue.trim() || selectedImages.length > 0
+
+			// Special case: during command_output, queue the message instead of
+			// triggering the primary button action (which would lose the message)
+			if (clineAskRef.current === "command_output" && hasInput) {
+				vscode.postMessage({ type: "queueMessage", text: inputValue.trim(), images: selectedImages })
+				setInputValue("")
+				setSelectedImages([])
+				return
+			}
+
 			if (enableButtons && primaryButtonText) {
 				handlePrimaryButtonClick(inputValue, selectedImages)
-			} else if (!sendingDisabled && !isProfileDisabled && (inputValue.trim() || selectedImages.length > 0)) {
+			} else if (!sendingDisabled && !isProfileDisabled && hasInput) {
 				handleSendMessage(inputValue, selectedImages)
 			}
 		},
@@ -1387,7 +1529,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		vscode.postMessage({ type: "condenseTaskContextRequest", text: taskId })
 	}
 
-	const areButtonsVisible = showScrollToBottom || primaryButtonText || secondaryButtonText || isStreaming
+	const areButtonsVisible = showScrollToBottom || primaryButtonText || secondaryButtonText
 
 	return (
 		<div
@@ -1415,6 +1557,27 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 						cacheWrites={apiMetrics.totalCacheWrites}
 						cacheReads={apiMetrics.totalCacheReads}
 						totalCost={apiMetrics.totalCost}
+						aggregatedCost={
+							currentTaskItem?.id && aggregatedCostsMap.has(currentTaskItem.id)
+								? aggregatedCostsMap.get(currentTaskItem.id)!.totalCost
+								: undefined
+						}
+						hasSubtasks={
+							!!(
+								currentTaskItem?.id &&
+								aggregatedCostsMap.has(currentTaskItem.id) &&
+								aggregatedCostsMap.get(currentTaskItem.id)!.childrenCost > 0
+							)
+						}
+						parentTaskId={currentTaskItem?.parentTaskId}
+						costBreakdown={
+							currentTaskItem?.id && aggregatedCostsMap.has(currentTaskItem.id)
+								? getCostBreakdownIfNeeded(aggregatedCostsMap.get(currentTaskItem.id)!, {
+										own: t("common:costs.own"),
+										subtasks: t("common:costs.subtasks"),
+									})
+								: undefined
+						}
 						contextTokens={apiMetrics.contextTokens}
 						buttonsDisabled={sendingDisabled}
 						handleCondenseContext={handleCondenseContext}
@@ -1454,7 +1617,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 								icon={<Cloud className="size-5 shrink-0" />}
 								onClick={() => openUpsell()}
 								dismissOnClick={false}
-								className="bg-none mt-6 border-border rounded-xl p-0 py-3 !text-base">
+								className="bg-none mt-6 border-border rounded-xl p-3 !text-base">
 								<Trans
 									i18nKey="cloud:upsell.taskList"
 									components={{
@@ -1466,6 +1629,8 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 					</div>
 				</div>
 			)}
+
+			{!task && showWorktreesInHomeScreen && <WorktreeSelector />}
 
 			{task && (
 				<>
@@ -1490,11 +1655,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 					{areButtonsVisible && (
 						<div
 							className={`flex h-9 items-center mb-1 px-[15px] ${
-								showScrollToBottom
-									? "opacity-100"
-									: enableButtons || (isStreaming && !didClickCancel)
-										? "opacity-100"
-										: "opacity-50"
+								showScrollToBottom ? "opacity-100" : enableButtons ? "opacity-100" : "opacity-50"
 							}`}>
 							{showScrollToBottom ? (
 								<StandardTooltip content={t("chat:scrollToBottom")}>
@@ -1514,7 +1675,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 								</StandardTooltip>
 							) : (
 								<>
-									{primaryButtonText && !isStreaming && (
+									{primaryButtonText && (
 										<StandardTooltip
 											content={
 												primaryButtonText === t("chat:retry.title")
@@ -1546,25 +1707,25 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 											</Button>
 										</StandardTooltip>
 									)}
-									{(secondaryButtonText || isStreaming) && (
+									{secondaryButtonText && (
 										<StandardTooltip
 											content={
-												isStreaming
-													? t("chat:cancel.tooltip")
-													: secondaryButtonText === t("chat:startNewTask.title")
-														? t("chat:startNewTask.tooltip")
-														: secondaryButtonText === t("chat:reject.title")
-															? t("chat:reject.tooltip")
-															: secondaryButtonText === t("chat:terminate.title")
-																? t("chat:terminate.tooltip")
+												secondaryButtonText === t("chat:startNewTask.title")
+													? t("chat:startNewTask.tooltip")
+													: secondaryButtonText === t("chat:reject.title")
+														? t("chat:reject.tooltip")
+														: secondaryButtonText === t("chat:terminate.title")
+															? t("chat:terminate.tooltip")
+															: secondaryButtonText === t("chat:killCommand.title")
+																? t("chat:killCommand.tooltip")
 																: undefined
 											}>
 											<Button
 												variant="secondary"
-												disabled={!enableButtons && !(isStreaming && !didClickCancel)}
-												className={isStreaming ? "flex-[2] ml-0" : "flex-1 ml-[6px]"}
+												disabled={!enableButtons}
+												className="flex-1 ml-[6px]"
 												onClick={() => handleSecondaryButtonClick(inputValue, selectedImages)}>
-												{isStreaming ? t("chat:cancel.title") : secondaryButtonText}
+												{secondaryButtonText}
 											</Button>
 										</StandardTooltip>
 									)}
@@ -1613,6 +1774,9 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 				modeShortcutText={modeShortcutText}
 				isBrowserSessionActive={!!isBrowserSessionActive}
 				showBrowserDockToggle={showBrowserDockToggle}
+				isStreaming={isStreaming}
+				onStop={handleStopTask}
+				onEnqueueMessage={handleEnqueueCurrentMessage}
 			/>
 
 			{isProfileDisabled && (

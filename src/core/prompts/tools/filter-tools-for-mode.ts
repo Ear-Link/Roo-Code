@@ -211,7 +211,7 @@ export function applyModelToolCustomization(
 
 /**
  * Filters native tools based on mode restrictions and model customization.
- * This ensures native tools are filtered the same way XML tools are filtered in the system prompt.
+ * This ensures native tools are filtered consistently with mode/tool permissions.
  *
  * @param nativeTools - Array of all available native tools
  * @param mode - Current mode slug
@@ -296,9 +296,11 @@ export function filterNativeToolsForMode(
 		allowedToolNames.delete("browser_action")
 	}
 
-	// Conditionally exclude apply_diff if diffs are disabled
-	if (settings?.diffEnabled === false) {
-		allowedToolNames.delete("apply_diff")
+	// Remove tools that are explicitly disabled via the disabledTools setting
+	if (settings?.disabledTools?.length) {
+		for (const toolName of settings.disabledTools) {
+			allowedToolNames.delete(toolName)
+		}
 	}
 
 	// Conditionally exclude access_mcp_resource if MCP is not enabled or there are no resources

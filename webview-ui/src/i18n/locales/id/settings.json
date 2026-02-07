@@ -1,4 +1,5 @@
 {
+	"back": "Kembali ke tampilan tugas",
 	"common": {
 		"save": "Simpan",
 		"done": "Selesai",
@@ -7,6 +8,10 @@
 		"select": "Pilih",
 		"add": "Tambah Header",
 		"remove": "Hapus"
+	},
+	"search": {
+		"placeholder": "Cari pengaturan...",
+		"noResults": "Tidak ada pengaturan yang ditemukan"
 	},
 	"header": {
 		"title": "Pengaturan",
@@ -24,6 +29,7 @@
 		"providers": "Provider",
 		"modes": "Mode",
 		"mcp": "Server MCP",
+		"worktrees": "Worktrees",
 		"autoApprove": "Auto-Approve",
 		"browser": "Browser",
 		"checkpoints": "Checkpoint",
@@ -35,7 +41,8 @@
 		"ui": "UI",
 		"experimental": "Eksperimental",
 		"language": "Bahasa",
-		"about": "Tentang Roo Code"
+		"about": "Tentang Roo Code",
+		"skills": "Skills"
 	},
 	"about": {
 		"bugReport": {
@@ -55,10 +62,46 @@
 		},
 		"community": "Ingin tips atau hanya nongkrong dengan pengguna Roo Code lainnya? Bergabunglah dengan <redditLink>reddit.com/r/RooCode</redditLink> atau <discordLink>discord.gg/roocode</discordLink>",
 		"contactAndCommunity": "Kontak & Komunitas",
-		"manageSettings": "Kelola Pengaturan"
+		"manageSettings": "Kelola Pengaturan",
+		"debugMode": {
+			"label": "Aktifkan mode debug",
+			"description": "Aktifkan mode debug untuk menampilkan tombol tambahan di header tugas yang memungkinkan melihat riwayat percakapan API dan pesan UI sebagai JSON yang diformat dalam file sementara."
+		}
 	},
 	"slashCommands": {
-		"description": "Kelola perintah slash kamu untuk mengeksekusi alur kerja dan tindakan kustom dengan cepat. <DocsLink>Pelajari lebih lanjut</DocsLink>"
+		"description": "Kelola perintah slash kamu untuk mengeksekusi alur kerja dan tindakan kustom dengan cepat. <DocsLink>Pelajari lebih lanjut</DocsLink>",
+		"workspaceCommands": "Perintah Ruang Kerja",
+		"globalCommands": "Perintah Global",
+		"noWorkspaceCommands": "Tidak ada perintah di proyek ini belum.",
+		"noGlobalCommands": "Tidak ada perintah global belum.",
+		"addCommand": "Tambahkan Perintah Slash",
+		"editCommand": "Edit perintah",
+		"deleteCommand": "Hapus perintah",
+		"deleteDialog": {
+			"title": "Hapus Perintah",
+			"description": "Apakah Anda yakin ingin menghapus perintah \"{{name}}\"? Tindakan ini tidak dapat dibatalkan.",
+			"confirm": "Hapus",
+			"cancel": "Batal"
+		},
+		"createDialog": {
+			"title": "Buat Perintah Slash Baru",
+			"nameLabel": "Nama",
+			"namePlaceholder": "my-command-name",
+			"nameHint": "Hanya huruf kecil, angka, tanda hubung dan garis bawah",
+			"sourceLabel": "Lokasi",
+			"create": "Buat",
+			"cancel": "Batal"
+		},
+		"source": {
+			"global": "Global (tersedia di semua ruang kerja)",
+			"project": "Ruang Kerja"
+		},
+		"validation": {
+			"nameRequired": "Nama diperlukan",
+			"nameTooLong": "Nama harus 64 karakter atau kurang",
+			"nameInvalid": "Nama hanya dapat berisi huruf, angka, tanda hubung, dan garis bawah"
+		},
+		"footer": "Gunakan perintah slash untuk akses cepat ke prompt dan alur kerja yang sering digunakan."
 	},
 	"prompts": {
 		"description": "Konfigurasi support prompt yang digunakan untuk aksi cepat seperti meningkatkan prompt, menjelaskan kode, dan memperbaiki masalah. Prompt ini membantu Roo memberikan bantuan yang lebih baik untuk tugas pengembangan umum."
@@ -231,13 +274,8 @@
 			"addButton": "Tambah",
 			"autoDenied": "Perintah dengan awalan `{{prefix}}` telah dilarang oleh pengguna. Jangan menghindari pembatasan ini dengan menjalankan perintah lain."
 		},
-		"showMenu": {
-			"label": "Tampilkan menu auto-approve di tampilan chat",
-			"description": "Ketika diaktifkan, menu auto-approve akan ditampilkan di bagian bawah tampilan chat, memungkinkan akses cepat ke pengaturan auto-approve"
-		},
 		"apiRequestLimit": {
 			"title": "Permintaan Maks",
-			"description": "Secara otomatis membuat sejumlah permintaan API ini sebelum meminta persetujuan untuk melanjutkan tugas.",
 			"unlimited": "Tidak terbatas"
 		},
 		"selectOptionsFirst": "Pilih setidaknya satu opsi di bawah ini untuk mengaktifkan persetujuan otomatis",
@@ -279,6 +317,37 @@
 		"vercelAiGatewayApiKey": "Vercel AI Gateway API Key",
 		"getVercelAiGatewayApiKey": "Dapatkan Vercel AI Gateway API Key",
 		"apiKeyStorageNotice": "API key disimpan dengan aman di Secret Storage VSCode",
+		"openAiCodexRateLimits": {
+			"title": "Usage Limits for Codex{{planLabel}}",
+			"loading": "Loading usage limits...",
+			"loadError": "Failed to load usage limits",
+			"retry": "Retry",
+			"usedPercent": "{{percent}}% used",
+			"resetsIn": "Resets in {{time}}",
+			"plan": {
+				"default": "",
+				"withType": " ({{planType}})"
+			},
+			"time": {
+				"now": "Now",
+				"notAvailable": "N/A"
+			},
+			"duration": {
+				"daysHours": "{{days}}d {{hours}}h",
+				"hoursMinutes": "{{hours}}h {{minutes}}m",
+				"minutes": "{{minutes}}m"
+			},
+			"window": {
+				"usage": "Usage",
+				"fiveHour": "5h limit",
+				"oneHour": "1h limit",
+				"daily": "Daily limit",
+				"weekly": "Weekly limit",
+				"days": "{{days}}d limit",
+				"hours": "{{hours}}h limit",
+				"minutes": "{{minutes}}m limit"
+			}
+		},
 		"useCustomBaseUrl": "Gunakan base URL kustom",
 		"useReasoning": "Aktifkan reasoning",
 		"useHostHeader": "Gunakan Host header kustom",
@@ -301,11 +370,11 @@
 		"getAnthropicApiKey": "Dapatkan Anthropic API Key",
 		"anthropicUseAuthToken": "Kirim Anthropic API Key sebagai Authorization header alih-alih X-Api-Key",
 		"anthropic1MContextBetaLabel": "Aktifkan jendela konteks 1M (Beta)",
-		"anthropic1MContextBetaDescription": "Memperluas jendela konteks menjadi 1 juta token untuk Claude Sonnet 4",
+		"anthropic1MContextBetaDescription": "Memperluas jendela konteks menjadi 1 juta token untuk Claude Sonnet 4 / 4.5 / Claude Opus 4.6",
 		"awsBedrock1MContextBetaLabel": "Aktifkan jendela konteks 1M (Beta)",
-		"awsBedrock1MContextBetaDescription": "Memperluas jendela konteks menjadi 1 juta token untuk Claude Sonnet 4",
+		"awsBedrock1MContextBetaDescription": "Memperluas jendela konteks menjadi 1 juta token untuk Claude Sonnet 4 / 4.5 / Claude Opus 4.6",
 		"vertex1MContextBetaLabel": "Aktifkan jendela konteks 1M (Beta)",
-		"vertex1MContextBetaDescription": "Memperluas jendela konteks menjadi 1 juta token untuk Claude Sonnet 4",
+		"vertex1MContextBetaDescription": "Memperluas jendela konteks menjadi 1 juta token untuk Claude Sonnet 4 / 4.5 / Claude Opus 4.6",
 		"basetenApiKey": "Baseten API Key",
 		"getBasetenApiKey": "Dapatkan Baseten API Key",
 		"cerebrasApiKey": "Cerebras API Key",
@@ -392,16 +461,6 @@
 		"cacheUsageNote": "Catatan: Jika kamu tidak melihat penggunaan cache, coba pilih model yang berbeda lalu pilih model yang kamu inginkan lagi.",
 		"vscodeLmModel": "Model Bahasa",
 		"vscodeLmWarning": "Catatan: Model yang diakses melalui VS Code Language Model API dapat dibungkus atau disetel‑halus oleh penyedia, sehingga perilakunya dapat berbeda dibandingkan menggunakan model yang sama secara langsung dari penyedia atau router tipikal. Untuk menggunakan model dari menu tarik‑turun «Language Model», pertama beralihlah ke model tersebut lalu klik «Terima» pada prompt Copilot Chat; jika tidak, Anda mungkin melihat kesalahan seperti 400 «The requested model is not supported».",
-		"geminiParameters": {
-			"urlContext": {
-				"title": "Aktifkan konteks URL",
-				"description": "Memungkinkan Gemini mengakses dan memproses URL untuk konteks tambahan saat menghasilkan respons. Berguna untuk tugas yang memerlukan analisis konten web."
-			},
-			"groundingSearch": {
-				"title": "Aktifkan Grounding dengan Pencarian Google",
-				"description": "Memungkinkan Gemini mencari informasi terkini di Google dan mendasarkan respons pada data waktu nyata. Berguna untuk kueri yang memerlukan informasi terkini."
-			}
-		},
 		"googleCloudSetup": {
 			"title": "Untuk menggunakan Google Cloud Vertex AI, kamu perlu:",
 			"step1": "1. Buat akun Google Cloud, aktifkan Vertex AI API & aktifkan model Claude yang diinginkan.",
@@ -605,7 +664,6 @@
 				"label": "Pesan diagnostik maksimum",
 				"description": "Jumlah maksimum pesan diagnostik yang akan disertakan per file. Batas ini berlaku untuk penyertaan otomatis (ketika checkbox diaktifkan) dan penyebutan manual @problems. Nilai yang lebih tinggi memberikan lebih banyak konteks tetapi meningkatkan penggunaan token.",
 				"resetTooltip": "Reset ke nilai default (50)",
-				"unlimited": "Pesan diagnostik tidak terbatas",
 				"unlimitedLabel": "Tak terbatas"
 			},
 			"delayAfterWrite": {
@@ -688,6 +746,15 @@
 			"label": "Batas karakter terminal",
 			"description": "Override batas baris untuk mencegah masalah memori dengan memberlakukan cap keras pada ukuran output. Jika terlampaui, simpan awal dan akhir lalu tampilkan placeholder ke Roo di mana konten dilewati. <0>Pelajari lebih lanjut</0>"
 		},
+		"outputPreviewSize": {
+			"label": "Ukuran pratinjau keluaran perintah",
+			"description": "Mengontrol seberapa banyak keluaran perintah yang dilihat Roo secara langsung. Keluaran lengkap selalu disimpan dan dapat diakses saat diperlukan.",
+			"options": {
+				"small": "Kecil (5KB)",
+				"medium": "Sedang (10KB)",
+				"large": "Besar (20KB)"
+			}
+		},
 		"shellIntegrationTimeout": {
 			"label": "Timeout integrasi shell terminal",
 			"description": "Waktu tunggu integrasi shell VS Code sebelum menjalankan perintah. Naikkan jika shell lambat start atau muncul error 'Shell Integration Unavailable'. <0>Pelajari lebih lanjut</0>"
@@ -699,10 +766,6 @@
 		"commandDelay": {
 			"label": "Delay perintah terminal",
 			"description": "Tambahkan jeda singkat setelah setiap perintah agar VS Code terminal bisa flush semua output (bash/zsh: PROMPT_COMMAND sleep; PowerShell: start-sleep). Gunakan hanya jika output ekor hilang; jika tidak biarkan di 0. <0>Pelajari lebih lanjut</0>"
-		},
-		"compressProgressBar": {
-			"label": "Kompres keluaran bilah kemajuan",
-			"description": "Menciutkan bilah kemajuan/spinner sehingga hanya status akhir yang disimpan (menghemat token). <0>Pelajari lebih lanjut</0>"
 		},
 		"powershellCounter": {
 			"label": "Aktifkan solusi penghitung PowerShell",
@@ -732,14 +795,6 @@
 	"advancedSettings": {
 		"title": "Pengaturan lanjutan"
 	},
-	"toolProtocol": {
-		"label": "Protokol Panggilan Alat",
-		"description": "Pilih bagaimana Roo berkomunikasi dengan API. Asli menggunakan API panggilan fungsi penyedia, sedangkan XML menggunakan definisi alat berformat XML.",
-		"default": "Default",
-		"xml": "XML",
-		"native": "Asli",
-		"currentDefault": "Default: {{protocol}}"
-	},
 	"advanced": {
 		"diff": {
 			"label": "Aktifkan editing melalui diff",
@@ -756,10 +811,6 @@
 					"unified": "Strategi unified diff mengambil beberapa pendekatan untuk menerapkan diff dan memilih pendekatan terbaik.",
 					"multiBlock": "Strategi multi-block diff memungkinkan memperbarui beberapa blok kode dalam file dalam satu permintaan."
 				}
-			},
-			"matchPrecision": {
-				"label": "Presisi pencocokan",
-				"description": "Slider ini mengontrol seberapa tepat bagian kode harus cocok saat menerapkan diff. Nilai yang lebih rendah memungkinkan pencocokan yang lebih fleksibel tetapi meningkatkan risiko penggantian yang salah. Gunakan nilai di bawah 100% dengan sangat hati-hati."
 			}
 		},
 		"todoList": {
@@ -768,27 +819,6 @@
 		}
 	},
 	"experimental": {
-		"warning": "⚠️",
-		"autoCondenseContextPercent": {
-			"label": "Ambang batas untuk memicu kondensasi konteks cerdas",
-			"description": "Ketika context window mencapai ambang batas ini, Roo akan secara otomatis mengondensasikannya."
-		},
-		"condensingApiConfiguration": {
-			"label": "Konfigurasi API untuk Kondensasi Konteks",
-			"description": "Pilih konfigurasi API mana yang akan digunakan untuk operasi kondensasi konteks. Biarkan tidak dipilih untuk menggunakan konfigurasi aktif saat ini.",
-			"useCurrentConfig": "Default"
-		},
-		"customCondensingPrompt": {
-			"label": "Prompt Kondensasi Konteks Kustom",
-			"description": "Kustomisasi system prompt yang digunakan untuk kondensasi konteks. Biarkan kosong untuk menggunakan prompt default.",
-			"placeholder": "Masukkan prompt kondensasi kustom kamu di sini...\n\nKamu dapat menggunakan struktur yang sama dengan prompt default:\n- Previous Conversation\n- Current Work\n- Key Technical Concepts\n- Relevant Files and Code\n- Problem Solving\n- Pending Tasks and Next Steps",
-			"reset": "Reset ke Default",
-			"hint": "Kosong = gunakan prompt default"
-		},
-		"AUTO_CONDENSE_CONTEXT": {
-			"name": "Secara cerdas mengondensasi context window",
-			"description": "Kondensasi konteks cerdas menggunakan panggilan LLM untuk merangkum percakapan masa lalu ketika context window tugas mencapai ambang batas yang telah ditetapkan, daripada menghapus pesan lama ketika konteks penuh."
-		},
 		"DIFF_STRATEGY_UNIFIED": {
 			"name": "Gunakan strategi unified diff eksperimental",
 			"description": "Aktifkan strategi unified diff eksperimental. Strategi ini mungkin mengurangi jumlah retry yang disebabkan oleh error model tetapi dapat menyebabkan perilaku yang tidak terduga atau edit yang salah. Hanya aktifkan jika kamu memahami risikonya dan bersedia meninjau semua perubahan dengan hati-hati."
@@ -796,14 +826,6 @@
 		"INSERT_BLOCK": {
 			"name": "Gunakan tool insert content eksperimental",
 			"description": "Aktifkan tool insert content eksperimental, memungkinkan Roo menyisipkan konten pada nomor baris spesifik tanpa perlu membuat diff."
-		},
-		"POWER_STEERING": {
-			"name": "Gunakan mode \"power steering\" eksperimental",
-			"description": "Ketika diaktifkan, Roo akan mengingatkan model tentang detail definisi mode saat ini lebih sering. Ini akan menghasilkan kepatuhan yang lebih kuat terhadap definisi peran dan instruksi kustom, tetapi akan menggunakan lebih banyak token per pesan."
-		},
-		"AUTOCOMPLETE": {
-			"name": "Gunakan fitur \"autocomplete\" eksperimental",
-			"description": "Ketika diaktifkan, Roo akan memberikan saran kode inline saat kamu mengetik. Memerlukan Roo Code API Provider."
 		},
 		"CONCURRENT_FILE_READS": {
 			"name": "Aktifkan pembacaan file bersamaan",
@@ -816,10 +838,6 @@
 		"MARKETPLACE": {
 			"name": "Aktifkan Marketplace",
 			"description": "Ketika diaktifkan, kamu dapat menginstal MCP dan mode kustom dari Marketplace."
-		},
-		"MULTI_FILE_APPLY_DIFF": {
-			"name": "Aktifkan edit file bersamaan",
-			"description": "Ketika diaktifkan, Roo dapat mengedit beberapa file dalam satu permintaan. Ketika dinonaktifkan, Roo harus mengedit file satu per satu. Menonaktifkan ini dapat membantu saat bekerja dengan model yang kurang mampu atau ketika kamu ingin kontrol lebih terhadap modifikasi file."
 		},
 		"PREVENT_FOCUS_DISRUPTION": {
 			"name": "Pengeditan Latar Belakang",
@@ -849,10 +867,6 @@
 		"RUN_SLASH_COMMAND": {
 			"name": "Aktifkan perintah slash yang dimulai model",
 			"description": "Ketika diaktifkan, Roo dapat menjalankan perintah slash Anda untuk mengeksekusi alur kerja."
-		},
-		"MULTIPLE_NATIVE_TOOL_CALLS": {
-			"name": "Panggilan tool paralel",
-			"description": "Ketika diaktifkan, protokol native dapat mengeksekusi beberapa tool dalam satu giliran pesan asisten."
 		},
 		"CUSTOM_TOOLS": {
 			"name": "Aktifkan tool kustom",
@@ -906,7 +920,6 @@
 		"simplifiedExplanation": "Anda dapat menyesuaikan pengaturan model terperinci nanti."
 	},
 	"footer": {
-		"feedback": "Jika kamu punya pertanyaan atau feedback, jangan ragu untuk membuka issue di <githubLink>github.com/RooCodeInc/Roo-Code</githubLink> atau bergabung <redditLink>reddit.com/r/RooCode</redditLink> atau <discordLink>discord.gg/roocode</discordLink>",
 		"telemetry": {
 			"label": "Izinkan pelaporan error dan penggunaan anonim",
 			"description": "Bantu tingkatkan Roo Code dengan mengirimkan data penggunaan anonim dan laporan error. Telemetri ini tidak mengumpulkan kode, prompt, atau informasi pribadi. Lihat <privacyLink>kebijakan privasi</privacyLink> kami untuk detail lebih lanjut. Anda dapat menonaktifkannya kapan saja."
@@ -1000,5 +1013,58 @@
 			"label": "Memerlukan {{primaryMod}}+Enter untuk mengirim pesan",
 			"description": "Ketika diaktifkan, kamu harus menekan {{primaryMod}}+Enter untuk mengirim pesan alih-alih hanya Enter"
 		}
+	},
+	"skills": {
+		"description": "Kelola skills yang memberikan instruksi kontekstual kepada agen. Skills diterapkan secara otomatis saat relevan dengan tugas Anda. <DocsLink>Pelajari lebih lanjut</DocsLink>",
+		"workspaceSkills": "Skills Ruang Kerja",
+		"globalSkills": "Skills Global",
+		"noWorkspaceSkills": "Tidak ada skills di proyek ini belum.",
+		"noGlobalSkills": "Tidak ada skills global belum.",
+		"addSkill": "Tambahkan Skill",
+		"editSkill": "Edit skill",
+		"deleteSkill": "Hapus skill",
+		"configureModes": "Ketersediaan mode",
+		"modeAny": "Mode apa saja",
+		"modeCount": "{{count}} mode",
+		"deleteDialog": {
+			"title": "Hapus Skill",
+			"description": "Apakah Anda yakin ingin menghapus skill \"{{name}}\"? Tindakan ini tidak dapat dibatalkan.",
+			"confirm": "Hapus",
+			"cancel": "Batal"
+		},
+		"modeDialog": {
+			"title": "Konfigurasi Mode Skill",
+			"description": "Pilih mode mana yang dapat menggunakan skill ini",
+			"intro": "Untuk menjaga konteks Anda tetap ringan, kami merekomendasikan hanya membuat skills tersedia untuk mode yang membutuhkannya.",
+			"anyMode": "Mode apa pun (tersedia di mana-mana)",
+			"save": "Simpan",
+			"cancel": "Batal"
+		},
+		"createDialog": {
+			"title": "Buat Skill Baru",
+			"nameLabel": "Nama",
+			"namePlaceholder": "nama-skill-saya",
+			"descriptionLabel": "Deskripsi",
+			"descriptionPlaceholder": "Jelaskan kapan skill ini harus digunakan...",
+			"sourceLabel": "Lokasi",
+			"modeLabel": "Mode (opsional)",
+			"modePlaceholder": "Mode apa saja",
+			"modeHint": "Batasi skill ini ke mode tertentu",
+			"modeAny": "Mode apa saja",
+			"create": "Buat",
+			"cancel": "Batal"
+		},
+		"source": {
+			"global": "Global (tersedia di semua proyek)",
+			"project": "Proyek (workspace ini saja)"
+		},
+		"validation": {
+			"nameRequired": "Nama diperlukan",
+			"nameTooLong": "Nama harus 64 karakter atau kurang",
+			"nameInvalid": "Nama harus 1-64 huruf kecil, angka, atau tanda hubung",
+			"descriptionRequired": "Deskripsi diperlukan",
+			"descriptionTooLong": "Deskripsi harus 1024 karakter atau kurang"
+		},
+		"footer": "Buat skills Anda sendiri dengan mode Skill Writer, tersedia di <MarketplaceLink>Modes Marketplace</MarketplaceLink>."
 	}
 }
